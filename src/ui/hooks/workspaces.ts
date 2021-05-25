@@ -1,7 +1,27 @@
 import { gql, useQuery, useMutation } from "@apollo/client";
+import { mutate } from "ui/utils/apolloClient";
 import { Workspace } from "ui/types";
 
 const NO_WORKSPACES: Workspace[] = [];
+
+export function createWorkspaceAPI(workspaceId: string) {
+  mutate({
+    mutation: gql`
+    mutation CreateWorkspaceAPI($workspaceId: ID!) {
+        createWorkspaceAPIKey(
+          input: { workspaceId: $workspaceId, label: "Sourcemap Upload API Key", scopes: "["write:sourcemap"]" }
+        ) {
+          success
+        }
+      }
+    `,
+    variables: {
+      workspaceId,
+    },
+  });
+}
+
+window.createWorkspaceAPI = createWorkspaceAPI;
 
 export function useCreateNewWorkspace() {
   const [createNewWorkspace, { error }] = useMutation(
