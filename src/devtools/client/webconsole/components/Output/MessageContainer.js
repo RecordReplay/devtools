@@ -83,6 +83,8 @@ function getMessageComponent(message) {
 
   switch (message.source) {
     case MESSAGE_SOURCE.CONSOLE_API:
+    case MESSAGE_SOURCE.LOGPOINT_LOADING:
+    case MESSAGE_SOURCE.LOGPOINT_RESULT:
       return componentMap.get("ConsoleApiCall");
     case MESSAGE_SOURCE.JAVASCRIPT:
       switch (message.type) {

@@ -255,6 +255,26 @@ function messages(state = MessageState(), action) {
       );
     }
 
+    case constants.MESSAGES_PRUNE_LOGPOINT: {
+      const removedIds = [];
+      for (const [id, message] of messagesById) {
+        if (
+          message.source === MESSAGE_SOURCE.LOGPOINT_LOADING &&
+          message.logpointId == action.logpointId
+        ) {
+          removedIds.push(id);
+        }
+      }
+
+      return removeMessagesFromState(
+        {
+          ...state,
+          removedLogpointIds: new Set([...state.removedLogpointIds, action.logpointId]),
+        },
+        removedIds
+      );
+    }
+
     case constants.MESSAGES_CLEAR_LOGPOINT: {
       const removedIds = [];
       for (const [id, message] of messagesById) {

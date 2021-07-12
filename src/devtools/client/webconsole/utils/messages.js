@@ -96,6 +96,14 @@ function transformPacket(packet) {
       return transformConsoleAPICallPacket(packet);
     }
 
+    case "LogpointLoading": {
+      return transformLogpointLoadingPacket(packet);
+    }
+
+    case "LogpointResult": {
+      return transformLogpointResultPacket(packet);
+    }
+
     case "will-navigate": {
       return transformNavigationMessagePacket(packet);
     }
@@ -164,6 +172,20 @@ function transformConsoleAPICallPacket(message) {
     logpointId: message.logpointId,
     pauseId: message.pauseId,
   });
+}
+
+function transformLogpointLoadingPacket(packet) {
+  return {
+    ...transformConsoleAPICallPacket(packet),
+    source: MESSAGE_SOURCE.LOGPOINT_LOADING,
+  };
+}
+
+function transformLogpointResultPacket(packet) {
+  return {
+    ...transformConsoleAPICallPacket(packet),
+    source: MESSAGE_SOURCE.LOGPOINT_RESULT,
+  };
 }
 
 function transformNavigationMessagePacket(packet) {

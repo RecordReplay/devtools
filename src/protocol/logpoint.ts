@@ -33,6 +33,7 @@ export const LogpointHandlers: {
     time: number,
     location: Location
   ) => void;
+  pruneLogpoint?: (logGroupId: string) => void;
   clearLogpoint?: (logGroupId: string) => void;
 } = {};
 
@@ -270,6 +271,10 @@ export async function setLogpoint(
     return;
   }
 
+  if (LogpointHandlers.pruneLogpoint) {
+    LogpointHandlers.pruneLogpoint(logGroupId);
+  }
+
   // The analysis points may have arrived in any order, so we have to sort
   // them after they arrive.
   points.sort((a, b) => compareNumericStrings(a.point, b.point));
@@ -385,6 +390,10 @@ export async function setEventLogpoint(logGroupId: string, eventTypes: string[])
   };
 
   await analysisManager.runAnalysis(params, handler);
+
+  if (LogpointHandlers.pruneLogpoint) {
+    LogpointHandlers.pruneLogpoint(logGroupId);
+  }
 }
 
 async function findFrameworkListeners(
@@ -417,6 +426,10 @@ async function findFrameworkListeners(
   };
 
   await analysisManager.runAnalysis(params, handler);
+
+  if (LogpointHandlers.pruneLogpoint) {
+    LogpointHandlers.pruneLogpoint(logGroupId);
+  }
 }
 
 export async function setExceptionLogpoint(logGroupId: string) {
@@ -446,6 +459,10 @@ export async function setExceptionLogpoint(logGroupId: string) {
   };
 
   await analysisManager.runAnalysis(params, handler);
+
+  if (LogpointHandlers.pruneLogpoint) {
+    LogpointHandlers.pruneLogpoint(logGroupId);
+  }
 }
 
 export function removeLogpoint(logGroupId: string) {

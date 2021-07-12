@@ -10,15 +10,16 @@ const { prepareMessage } = require("devtools/client/webconsole/utils/messages");
 const { IdGenerator } = require("devtools/client/webconsole/utils/id-generator");
 const { ThreadFront } = require("protocol/thread");
 const { LogpointHandlers } = require("protocol/logpoint");
+const { getIndexed, getLoadedRegions } = require("ui/reducers/app");
 
 const {
   MESSAGES_ADD,
   MESSAGES_CLEAR,
+  MESSAGES_PRUNE_LOGPOINT,
   MESSAGES_CLEAR_LOGPOINT,
   MESSAGE_OPEN,
   MESSAGE_CLOSE,
   MESSAGE_UPDATE_PAYLOAD,
-  PAUSED_EXECUTION_POINT,
   MESSAGES_CLEAR_EVALUATIONS,
   MESSAGES_CLEAR_EVALUATION,
 } = require("devtools/client/webconsole/constants");
@@ -32,6 +33,7 @@ export function setupMessages(store) {
     store.dispatch(onLogpointLoading(logGroupId, point, time, location));
   LogpointHandlers.onResult = (logGroupId, point, time, location, pause, values) =>
     store.dispatch(onLogpointResult(logGroupId, point, time, location, pause, values));
+  LogpointHandlers.pruneLogpoint = logGroupId => store.dispatch(messagesPruneLogpoint(logGroupId));
   LogpointHandlers.clearLogpoint = logGroupId => store.dispatch(messagesClearLogpoint(logGroupId));
 
   ThreadFront.findConsoleMessages((_, msg) => store.dispatch(onConsoleMessage(msg)));
@@ -116,14 +118,24 @@ function onConsoleMessage(msg) {
 }
 
 function onLogpointLoading(logGroupId, point, time, { sourceId, line, column }) {
-  return async ({ dispatch }) => {
+  return async ({ getState, dispatch }) => {
+    const state = getState();
+    const indexed = getIndexed(state);
+    const loadedRegions = getLoadedRegions(state);
+    if (
+      indexed &&
+      loadedRegions.loaded.every(timeRange => time < timeRange.begin || time > timeRange.end)
+    ) {
+      return;
+    }
+
     const packet = {
       errorMessage: "Loading...",
       sourceName: await ThreadFront.getSourceURL(sourceId),
       sourceId: sourceId,
       lineNumber: line,
       columnNumber: column,
-      category: "ConsoleAPI",
+      category: "LogpointLoading",
       info: true,
       executionPoint: point,
       executionPointTime: time,
@@ -136,14 +148,24 @@ function onLogpointLoading(logGroupId, point, time, { sourceId, line, column }) 
 }
 
 function onLogpointResult(logGroupId, point, time, { sourceId, line, column }, pause, values) {
-  return async ({ dispatch }) => {
+  return async ({ getState, dispatch }) => {
+    const state = getState();
+    const indexed = getIndexed(state);
+    const loadedRegions = getLoadedRegions(state);
+    if (
+      indexed &&
+      loadedRegions.loaded.every(timeRange => time < timeRange.begin || time > timeRange.end)
+    ) {
+      return;
+    }
+
     const packet = {
       errorMessage: "",
       sourceName: await ThreadFront.getSourceURL(sourceId),
       sourceId: sourceId,
       lineNumber: line,
       columnNumber: column,
-      category: "ConsoleAPI",
+      category: "LogpointResult",
       info: true,
       argumentValues: values,
       executionPoint: point,
@@ -213,6 +235,19 @@ export function messagesClearEvaluation(messageId, messageType) {
     type: MESSAGES_CLEAR_EVALUATION,
     messageId,
     messageType,
+  };
+}
+
+export function messagesPruneLogpoint(logpointId) {
+  return async ({ dispatch }) => {
+    if (throttledDispatchPromise) {
+      await throttledDispatchPromise;
+    }
+
+    return dispatch({
+      type: MESSAGES_PRUNE_LOGPOINT,
+      logpointId,
+    });
   };
 }
 

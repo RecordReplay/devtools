@@ -30,6 +30,7 @@ const actionTypes = {
   MESSAGES_CLEAR: "MESSAGES_CLEAR",
   MESSAGES_CLEAR_EVALUATIONS: "MESSAGES_CLEAR_EVALUATIONS",
   MESSAGES_CLEAR_EVALUATION: "MESSAGES_CLEAR_EVALUATION",
+  MESSAGES_PRUNE_LOGPOINT: "MESSAGES_PRUNE_LOGPOINT",
   MESSAGES_CLEAR_LOGPOINT: "MESSAGES_CLEAR_LOGPOINT",
   PERSIST_TOGGLE: "PERSIST_TOGGLE",
   PRIVATE_MESSAGES_CLEAR: "PRIVATE_MESSAGES_CLEAR",
@@ -127,6 +128,8 @@ const chromeRDPEnums = {
     // Messages emitted by the console frontend itself (i.e. similar messages grouping
     // header).
     CONSOLE_FRONTEND: "console-frontend",
+    LOGPOINT_LOADING: "logpoint-loading",
+    LOGPOINT_RESULT: "logpoint-result",
     STORAGE: "storage",
     APPCACHE: "appcache",
     RENDERING: "rendering",
