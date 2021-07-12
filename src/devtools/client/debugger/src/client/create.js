@@ -20,8 +20,10 @@ export async function createFrame(frame, index = 0, asyncIndex = 0) {
   }
 
   const { sourceId, line, column } = await ThreadFront.getPreferredLocation(frame.location);
+  const sourceUrl = await ThreadFront.getSourceURL(sourceId);
   const location = {
     sourceId: clientCommands.getSourceForActor(sourceId),
+    sourceUrl,
     line,
     column,
   };
@@ -29,8 +31,10 @@ export async function createFrame(frame, index = 0, asyncIndex = 0) {
   let alternateLocation;
   const alternate = await ThreadFront.getAlternateLocation(frame.location);
   if (alternate) {
+    const alternateSourceUrl = await ThreadFront.getSourceURL(alternate.sourceId);
     alternateLocation = {
       sourceId: clientCommands.getSourceForActor(alternate.sourceId),
+      sourceUrl: alternateSourceUrl,
       line: alternate.line,
       column: alternate.column,
     };

@@ -30,11 +30,13 @@
     // click the first source link in the console
     document.querySelectorAll(".webconsole-output .frame-link-source")[0].click();
     await checkBreakpointPanel(1);
+    await checkDebugLine();
 
     closeEditor();
     // click the second source link in the console
     document.querySelectorAll(".webconsole-output .frame-link-source")[1].click();
     await checkBreakpointPanel(1);
+    await checkDebugLine();
 
     // reload the recording
     url.searchParams.append("navigated", "true");
@@ -63,6 +65,12 @@ async function checkBreakpointPanel(selectedBreakpoint) {
     const statusElement = document.querySelector(".breakpoint-navigation-status-container");
     return statusElement && statusElement.textContent === `${selectedBreakpoint}/2`;
   });
+}
+
+async function checkDebugLine() {
+  await Test.waitUntil(() =>
+    document.querySelector(".editor-pane .CodeMirror-code .new-debug-line")
+  );
 }
 
 function closeEditor() {

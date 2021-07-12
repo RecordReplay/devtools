@@ -8,7 +8,6 @@ import {
   toEditorLine,
   toEditorColumn,
   getDocument,
-  hasDocument,
   startOperation,
   endOperation,
   getTokenEnd,
@@ -16,45 +15,39 @@ import {
 import { isException } from "../../utils/pause";
 import { getIndentation } from "../../utils/indentation";
 import { connect } from "../../utils/connect";
-import {
-  getVisibleSelectedFrame,
-  getPauseReason,
-  getSourceWithContent,
-  getPausePreviewLocation,
-} from "../../selectors";
-
-function isDocumentReady(source, location) {
-  return location && source && source.content && hasDocument(location.sourceId);
-}
+import { getPauseReason, getDebugLineLocation } from "../../selectors";
 
 export class DebugLine extends PureComponent {
   debugExpression;
 
   componentDidMount() {
-    const { why, location, source } = this.props;
-    this.setDebugLine(why, location, source);
+    const { why, location } = this.props;
+    this.setDebugLine(why, location);
   }
 
   componentWillUnmount() {
-    const { why, location, source } = this.props;
-    this.clearDebugLine(why, location, source);
+    const { why, location } = this.props;
+    this.clearDebugLine(why, location);
   }
 
   componentDidUpdate(prevProps) {
-    const { why, location, source } = this.props;
+    const { why, location } = this.props;
 
     startOperation();
-    this.clearDebugLine(prevProps.why, prevProps.location, prevProps.source);
-    this.setDebugLine(why, location, source);
+    this.clearDebugLine(prevProps.why, prevProps.location);
+    this.setDebugLine(why, location);
     endOperation();
   }
 
-  setDebugLine(why, location, source) {
-    if (!location || !isDocumentReady(source, location)) {
+  setDebugLine(why, location) {
+    if (!location) {
       return;
     }
     const { sourceId } = location;
     const doc = getDocument(sourceId);
+    if (!doc) {
+      return;
+    }
 
     const line = toEditorLine(location.line);
     let { markTextClass, lineClass } = this.getTextClasses(why);
@@ -79,8 +72,8 @@ export class DebugLine extends PureComponent {
     );
   }
 
-  clearDebugLine(why, location, source) {
-    if (!location || !isDocumentReady(source, location)) {
+  clearDebugLine(why, location) {
+    if (!location) {
       return;
     }
 
@@ -90,6 +83,9 @@ export class DebugLine extends PureComponent {
 
     const line = toEditorLine(location.line);
     const doc = getDocument(location.sourceId);
+    if (!doc) {
+      return;
+    }
     const { lineClass } = this.getTextClasses(why);
     doc.removeLineClass(line, "line", lineClass);
   }
@@ -111,13 +107,8 @@ export class DebugLine extends PureComponent {
 }
 
 const mapStateToProps = state => {
-  const frame = getVisibleSelectedFrame(state);
-  const previewLocation = getPausePreviewLocation(state);
-  const location = previewLocation || (frame && frame.location);
   return {
-    frame,
-    location,
-    source: location && getSourceWithContent(state, location.sourceId),
+    location: getDebugLineLocation(state),
     why: getPauseReason(state),
   };
 };
