@@ -13,3 +13,13 @@ export const GET_USER_INFO = gql`
     }
   }
 `;
+
+export const GET_USER_ID = gql`
+  query GetUserId {
+    viewer {
+      user {
+        id
+      }
+    }
+  }
+`;

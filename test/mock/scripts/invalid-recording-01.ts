@@ -1,4 +1,4 @@
-// Test loading an invalid or unauthorized recording ID.
+// Test that getting an invalid recording ID error from the backend shows an appropriate error.
 
 import { runTest, devtoolsURL } from "../src/runTest";
 import { installMockEnvironment } from "../src/mockEnvironment";
@@ -10,30 +10,24 @@ import {
   createUserSettingsMock,
   createGetUserMock,
 } from "../src/graphql";
+import { basicMessageHandlers, basicBindings } from "../src/handlers";
 import { Page } from "@recordreplay/playwright";
-
-/*
-// Test that using a recording ID that isn't a valid UUID shows an appropriate error.
-runTest("notUUID", async page => {
-  await page.goto(devtoolsURL({ id: "foobar" }));
-  await new Promise(resolve => setTimeout(resolve, 2000));
-});
-*/
 
 const recordingId = uuid();
 const userId = uuid();
 const user = { id: userId, uuid: userId };
 const graphqlMocks = [
-  createUserSettingsMock(),
+  ...createUserSettingsMock(),
   createRecordingIsInitializedMock({ recordingId, isInitialized: true }),
-  createRecordingOwnerUserIdMock({ recordingId, user }),
-  createGetRecordingMock({ recordingId }),
-  createGetUserMock({ user }),
+  ...createRecordingOwnerUserIdMock({ recordingId, user }),
+  ...createGetRecordingMock({ recordingId }),
+  ...createGetUserMock({ user }),
 ];
+const messageHandlers = basicMessageHandlers();
+const bindings = basicBindings();
 
-// Test that getting an invalid recording ID error from the backend shows an appropriate error.
 runTest("invalidRecordingID", async (page: Page) => {
   await page.goto(devtoolsURL({ id: recordingId }));
-  await installMockEnvironment(page, { graphqlMocks });
+  await installMockEnvironment(page, { graphqlMocks, messageHandlers, bindings });
   await page.textContent("text=You don't have permission to view this replay");
 });

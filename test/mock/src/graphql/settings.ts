@@ -1,8 +1,9 @@
 import { MockedResponse } from "@apollo/client/testing";
 import { GET_USER_SETTINGS } from "ui/graphql/settings";
+import { cloneResponse } from "./utils";
 
-export function createUserSettingsMock(): MockedResponse {
-  return {
+export function createUserSettingsMock(): MockedResponse[] {
+  const rv = {
     request: {
       query: GET_USER_SETTINGS,
     },
@@ -20,4 +21,5 @@ export function createUserSettingsMock(): MockedResponse {
       },
     },
   };
+  return cloneResponse(rv, 10);
 }

@@ -2,44 +2,9 @@ import { RecordingId } from "@recordreplay/protocol";
 import { gql, useQuery, useMutation, ApolloError } from "@apollo/client";
 import { query } from "ui/utils/apolloClient";
 import { Comment, CommentPosition } from "ui/state/comments";
+import { GET_COMMENTS_TIME, GET_COMMENTS } from "ui/graphql/comments";
 
 const NO_COMMENTS: Comment[] = [];
-export const GET_COMMENTS = gql`
-  query GetComments($recordingId: UUID!) {
-    recording(uuid: $recordingId) {
-      uuid
-      comments {
-        id
-        content
-        primaryLabel
-        secondaryLabel
-        createdAt
-        updatedAt
-        hasFrames
-        sourceLocation
-        time
-        point
-        position
-        user {
-          id
-          name
-          picture
-        }
-        replies {
-          id
-          content
-          createdAt
-          updatedAt
-          user {
-            id
-            name
-            picture
-          }
-        }
-      }
-    }
-  }
-`;
 
 export function useGetComments(
   recordingId: RecordingId
@@ -143,19 +108,7 @@ export async function getFirstComment(
   recordingId: string
 ): Promise<{ time: number; point: string; hasFrames: boolean } | undefined> {
   const commentsResult = await query({
-    query: gql`
-      query GetCommentsTime($recordingId: UUID!) {
-        recording(uuid: $recordingId) {
-          uuid
-          comments {
-            id
-            hasFrames
-            point
-            time
-          }
-        }
-      }
-    `,
+    query: GET_COMMENTS_TIME,
     variables: { recordingId },
   });
 

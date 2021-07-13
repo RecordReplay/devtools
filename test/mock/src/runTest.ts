@@ -116,3 +116,18 @@ export function devtoolsURL({ id }: { id: string }) {
   }
   return url;
 }
+
+const WaitTimeout = 30_000;
+
+export async function waitUntil(callback: () => Promise<boolean>) {
+  const startTime = Date.now();
+  while (true) {
+    if (Date.now() - startTime > WaitTimeout) {
+      throw new Error("waitUntil() timed out");
+    }
+    if (await callback()) {
+      return;
+    }
+    await new Promise(resolve => setTimeout(resolve, 200));
+  }
+}

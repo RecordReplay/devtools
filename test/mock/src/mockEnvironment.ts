@@ -10,53 +10,69 @@ declare global {
   }
 }
 
-export interface MockOptions {
+export interface MockHandlerHelpers {
+  Errors: Record<string, Error>;
+  emitEvent: (method: string, params: any) => void;
+  bindings: Record<string, any>;
+};
+
+type MockHandler = (params: any, helpers: MockHandlerHelpers) => any;
+export type MockHandlerRecord = Record<string, MockHandler>;
+
+interface MockOptions {
   graphqlMocks: MockedResponse[];
-  sessionError?: boolean;
+  messageHandlers: MockHandlerRecord;
+  bindings: Record<string, any>;
 }
 
-interface Error {
+interface MockOptionsJSON {
+  graphqlMocks: MockedResponse[];
+  messageHandlers: Record<string, string>;
+  bindings: Record<string, any>;
+}
+
+export interface Error {
   code: number;
   message: string;
 }
 
 // This script runs within the browser process.
-function doInstall(options: MockOptions) {
-  const Errors: Record<string, Error> = {
-    MissingDescription: { code: 28, message: "No description added for recording" },
-  };
-
-  function makeResult(result: any) {
-    return { result };
+function doInstall(options: MockOptionsJSON) {
+  function setImmediate(callback: () => void) {
+    setTimeout(callback, 0);
   }
 
-  function makeError(error: Error) {
-    return { error };
-  }
-
-  const messageHandlers: Record<string, (arg?: any) => any> = {
-    "Recording.getDescription": () => makeError(Errors.MissingDescription),
-    "Recording.createSession": () => {
-      const sessionId = "mock-test-session";
-      if (options.sessionError) {
-        setTimeout(() => {
-          emitEvent("Recording.sessionError", {
-            sessionId,
-            code: 1,
-            message: "Session died unexpectedly",
-          });
-        }, 2000);
-      }
-      return makeResult({ sessionId });
+  const helpers = {
+    Errors: {
+      InternalError: { code: 1, message: "Internal error" },
+      MissingDescription: { code: 28, message: "No description added for recording" },
     },
+    makeResult(result: any) {
+      return { result };
+    },
+    makeError(error: Error) {
+      return { error };
+    },
+    emitEvent(method: string, params: any) {
+      setImmediate(() => {
+        const event = { method, params };
+        receiveMessageCallback({ data: JSON.stringify(event) });
+      });
+    },
+    bindings: options.bindings,
   };
+
+  const messageHandlers: Record<string, MockHandler> = {};
+
+  // We manually iterate the keys here to avoid typescript transformations which
+  // won't work after evaluating this in the browser content process.
+  const keys = Object.keys(options.messageHandlers);
+  for (let i = 0; i < keys.length; i++) {
+    const name = keys[i];
+    eval(`messageHandlers["${name}"] = ${options.messageHandlers[name]};`);
+  }
 
   let receiveMessageCallback: (arg: { data: string }) => unknown;
-
-  function emitEvent(method: string, params: any) {
-    const event = { method, params };
-    receiveMessageCallback({ data: JSON.stringify(event) });
-  }
 
   window.mockEnvironment = {
     graphqlMocks: options.graphqlMocks,
@@ -67,15 +83,47 @@ function doInstall(options: MockOptions) {
       const msg = JSON.parse(str);
       if (!messageHandlers[msg.method]) {
         console.error(`Missing mock message handler for ${msg.method}`);
-        return new Promise(resolve => {});
+        return;
       }
-      const { result, error } = messageHandlers[msg.method](msg.params);
-      const response = { id: msg.id, result, error };
-      setTimeout(() => receiveMessageCallback({ data: JSON.stringify(response) }), 0);
+      let promise;
+      try {
+        promise = messageHandlers[msg.method](msg.params, helpers);
+        if (!(promise instanceof Promise)) {
+          promise = Promise.resolve(promise);
+        }
+      } catch (e) {
+        promise = Promise.reject(e);
+      }
+      promise.then(result => {
+        const response = { id: msg.id, result };
+        setImmediate(() => receiveMessageCallback({ data: JSON.stringify(response) }));
+      }, e => {
+        let error;
+        if (e.code && e.message) {
+          error = e;
+        } else {
+          console.error(`Mock message handler error ${e}`);
+          error = helpers.Errors.InternalError;
+        }
+        const response = { id: msg.id, error };
+        setImmediate(() => receiveMessageCallback({ data: JSON.stringify(response) }));
+      });
     },
   };
 }
 
-export function installMockEnvironment(page: Page, options: MockOptions = { graphqlMocks: [] }) {
-  page.evaluate<void, MockOptions>(doInstall, options);
+export async function installMockEnvironment(page: Page, options: MockOptions) {
+  const optionsJSON: MockOptionsJSON = {
+    graphqlMocks: options.graphqlMocks,
+    messageHandlers: {},
+    bindings: options.bindings,
+  };
+  for (const name of Object.keys(options.messageHandlers)) {
+    optionsJSON.messageHandlers[name] = options.messageHandlers[name].toString();
+  }
+  try {
+    await page.evaluate<void, MockOptionsJSON>(doInstall, optionsJSON);
+  } catch (e) {
+    console.log("ERROR", e);
+  }
 }

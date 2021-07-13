@@ -2,6 +2,7 @@ import { RecordingId } from "@recordreplay/protocol";
 import { gql, useQuery, useMutation } from "@apollo/client";
 import { User } from "ui/state/session";
 import { useGetUserId } from "./users";
+import { GET_ACTIVE_SESSIONS } from "ui/graphql/sessions";
 
 interface SessionUser extends User {
   sessionId?: string;
@@ -13,27 +14,10 @@ interface Session {
 
 export function useGetActiveSessions(recordingId: RecordingId) {
   const { userId, loading: userLoading } = useGetUserId();
-  const { data, error, loading } = useQuery(
-    gql`
-      query GetActiveSessions($recordingId: UUID!) {
-        recording(uuid: $recordingId) {
-          uuid
-          activeSessions {
-            id
-            user {
-              id
-              name
-              picture
-            }
-          }
-        }
-      }
-    `,
-    {
-      variables: { recordingId },
-      pollInterval: 5000,
-    }
-  );
+  const { data, error, loading } = useQuery(GET_ACTIVE_SESSIONS, {
+    variables: { recordingId },
+    pollInterval: 5000,
+  });
 
   if (error) {
     console.error("Apollo error while getting active sessions", error);

@@ -1,9 +1,9 @@
 import { RecordingId } from "@recordreplay/protocol";
 import { gql, useMutation } from "@apollo/client";
 import useAuth0 from "ui/utils/useAuth0";
-import { GET_COMMENTS } from "./comments";
 import { CommentPosition, PendingNewComment } from "ui/state/comments";
-import { GET_USER_ID } from "../users";
+import { GET_USER_ID } from "ui/graphql/users";
+import { GET_COMMENTS } from "ui/graphql/comments";
 
 interface NewCommentVariable extends Omit<PendingNewComment, "content"> {
   content: string;
