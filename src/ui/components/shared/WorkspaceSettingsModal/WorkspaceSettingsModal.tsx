@@ -40,9 +40,13 @@ function ModalButton({
 }
 
 export function WorkspaceMembers({ members }: { members: WorkspaceUser[] }) {
+  const sortedMembers = members.sort(
+    (a: WorkspaceUser, b: WorkspaceUser) => Number(b.pending) - Number(a.pending)
+  );
+
   return (
     <ul className="flex flex-col space-y-3">
-      {members.map(member =>
+      {sortedMembers.map(member =>
         member.email ? (
           <NonRegisteredWorkspaceMember member={member} key={`non-registered-${member.email}`} />
         ) : (

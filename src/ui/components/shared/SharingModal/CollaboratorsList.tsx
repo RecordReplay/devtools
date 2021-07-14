@@ -69,6 +69,24 @@ function Author({ picture, name }: { picture: string; name: string }) {
   );
 }
 
+function Collaborators({ collaborators }: { collaborators: CollaboratorDbData[] }) {
+  const sortedCollaborators = collaborators.sort(
+    (a: CollaboratorDbData, b: CollaboratorDbData) => Number(b.createdAt) - Number(a.createdAt)
+  );
+
+  return (
+    <>
+      {sortedCollaborators.map((collaborator, i) => (
+        <Collaborator
+          collaborator={collaborator}
+          collaborationId={collaborator.collaborationId}
+          key={i}
+        />
+      ))}
+    </>
+  );
+}
+
 export default function CollaboratorsList({
   recording,
   collaborators,
@@ -79,15 +97,7 @@ export default function CollaboratorsList({
   return (
     <div className="permissions-list">
       <Author picture={recording.user!.picture} name={recording.user!.name} />
-      {collaborators
-        ? collaborators.map((collaborator, i) => (
-            <Collaborator
-              collaborator={collaborator}
-              collaborationId={collaborator.collaborationId}
-              key={i}
-            />
-          ))
-        : null}
+      {collaborators ? <Collaborators {...{ collaborators }} /> : null}
     </div>
   );
 }
