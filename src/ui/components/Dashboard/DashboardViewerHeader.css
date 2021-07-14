@@ -32,13 +32,13 @@
   align-items: center;
   cursor: pointer;
   line-height: 16px;
-  border: 1px solid var(--primaryAccent);
-  color: var(--primaryAccent);
+  border: 1px solid var(--primary-accent);
+  color: var(--primary-accent);
 }
 
 .dashboard-viewer-header-actions .batch-action .img {
   margin-right: 4px;
-  background: var(--primaryAccentHover);
+  background: var(--primary-accent-hover);
 }
 
 .dashboard-viewer-header-actions .batch-action.disabled {
@@ -62,12 +62,12 @@
   align-items: center;
   cursor: pointer;
   line-height: 16px;
-  border: 1px solid var(--primaryAccent);
-  color: var(--primaryAccentHover);
+  border: 1px solid var(--primary-accent);
+  color: var(--primary-accent-hover);
   margin-right: 12px;
 }
 
 .editing .dashboard-viewer-header-actions button.toggle-editing {
   color: white;
-  background-color: var(--primaryAccentHover);
+  background-color: var(--primary-accent-hover);
 }

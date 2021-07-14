@@ -3,18 +3,27 @@ import "./DashboardViewerHeader.css";
 import BatchActionDropdown from "./BatchActionDropdown";
 import "./DashboardViewerHeader.css";
 import { RecordingId } from "@recordreplay/protocol";
+import { PrimaryButton } from "../shared/Button";
 
-type HeaderActionsProps = Pick<DashboardViewerHeaderProps, "selectedIds" | "setSelectedIds" | "editing" | "toggleEditing">;
+type HeaderActionsProps = Pick<
+  DashboardViewerHeaderProps,
+  "selectedIds" | "setSelectedIds" | "editing" | "toggleEditing"
+>;
 
-function HeaderActions({ selectedIds, setSelectedIds, editing, toggleEditing }: HeaderActionsProps) {
+function HeaderActions({
+  selectedIds,
+  setSelectedIds,
+  editing,
+  toggleEditing,
+}: HeaderActionsProps) {
   return (
     <div className="dashboard-viewer-header-actions">
       {editing ? (
         <BatchActionDropdown setSelectedIds={setSelectedIds} selectedIds={selectedIds} />
       ) : null}
-      <button className="toggle-editing" onClick={toggleEditing}>
+      <PrimaryButton size="xl" color="blue" onClick={toggleEditing}>
         {editing ? "Done" : "Edit"}
-      </button>
+      </PrimaryButton>
     </div>
   );
 }
