@@ -10,6 +10,7 @@ import classNames from "classnames";
 import Modal from "ui/components/shared/NewModal";
 import { Recording, UserSettings, Workspace } from "ui/types";
 import { BlankLoadingScreen } from "../shared/BlankScreen";
+import MaterialIcon from "../shared/MaterialIcon";
 
 type UploadScreenProps = PropsFromRedux & { recording: Recording; userSettings: UserSettings };
 type Status = "saving" | "deleting" | "deleted" | null;
@@ -52,6 +53,20 @@ function DeletedScreen({ url }: { url: string }) {
           </div>
         </div>
       </Modal>
+    </div>
+  );
+}
+
+function SoftLimitWarning() {
+  return (
+    <div className="flex flex-row space-x-2 border rounded-lg p-4 border-yellow-400 bg-yellow-50">
+      <div className="flex flex-col space-y-2">
+        <div className="flex flex-row text-yellow-800 font-medium text-xl items-center space-x-1">
+          <MaterialIcon className="text-yellow-800">warning_amber</MaterialIcon>
+          <div>This replay is over 2 minutes</div>
+        </div>
+        <div>We recommend keeping replays below 2 minutes for the best debugging experience.</div>
+      </div>
     </div>
   );
 }
@@ -284,6 +299,9 @@ function UploadScreen({ recordingId, recording, userSettings }: UploadScreenProp
     return <DeletedScreen url="/" />;
   }
 
+  // Soft limit is set at 2 minutes.
+  const showLimitWarning = recording.duration > 120 * 1000;
+
   return (
     <div
       className="w-full h-full"
@@ -311,6 +329,7 @@ function UploadScreen({ recordingId, recording, userSettings }: UploadScreenProp
                 {...{ toggleShowSharingSettings, isPublic, workspaces, selectedWorkspaceId }}
               />
             )}
+            {showLimitWarning ? <SoftLimitWarning /> : null}
             <Actions onDiscard={onDiscard} status={status} />
           </form>
         </div>
